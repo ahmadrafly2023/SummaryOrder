@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kawal Summary Order (witel)</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0f0eb;
+  --surface: #ffffff;
+  --surface2: #f7f7f3;
+  --border: #e0e0d8;
+  --text: #1a1a1a;
+  --text2: #666660;
+  --accent: #2d6ef6;
+  --accent2: #1a4fc9;
+  --green: #1aaf5d;
+  --orange: #f07030;
+  --red: #e03030;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --radius: 12px;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+[data-theme="dark"] {
+  --bg: #111116;
+  --surface: #1c1c24;
+  --surface2: #22222d;
+  --border: #2e2e3e;
+  --text: #e8e8f0;
+  --text2: #8888a0;
+  --shadow: 0 2px 16px rgba(0,0,0,0.4);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ─── TOP BAR ─── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: 0 28px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.topbar-logo span {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+.pill-btn {
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 2px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pill-btn:hover { border-color: var(--accent); color: var(--accent); }
+.pill-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.theme-toggle {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent); }
+
+/* ─── LAYOUT ─── */
+.main { max-width: 1500px; margin: 0 auto; padding: 28px 24px; }
+
+/* ─── STEP CARDS ─── */
+.step-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+@media (max-width: 900px) { .step-grid { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--accent); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.step-badge {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+textarea, input[type=text] {
+  width: 100%;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  padding: 12px;
+  transition: border-color 0.2s;
+  resize: vertical;
+}
+textarea { min-height: 140px; }
+textarea:focus, input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+/* ─── DEFAULT GRID ─── */
+.defaults-card { margin-bottom: 20px; }
+.defaults-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-top: 4px;
+}
+@media (max-width: 1100px) { .defaults-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 700px) { .defaults-grid { grid-template-columns: 1fr; } }
+
+.input-group label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.input-group input { font-size: 12.5px; padding: 9px 12px; }
+
+/* ─── ACTION BAR ─── */
+.action-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(45,110,246,0.35);
+}
+.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-ghost {
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { opacity: 0.85; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover { opacity: 0.85; }
+
+/* ─── GENERATE TABLE ─── */
+.generate-table-card { margin-bottom: 20px; display: none; }
+.generate-table-card.show { display: block; }
+
+.order-table-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+thead tr { background: var(--surface2); }
+th {
+  text-align: left;
+  padding: 10px 10px;
+  border-bottom: 2px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text2);
+  white-space: nowrap;
+}
+td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:hover td { background: var(--surface2); }
+
+td input[type=text] {
+  font-size: 12px;
+  padding: 5px 8px;
+  min-height: unset;
+  border-radius: 6px;
+  min-width: 100px;
+}
+.col-order {
+  color: var(--accent);
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: opacity 0.15s;
+}
+.col-order:hover { opacity: 0.7; }
+.col-order::after {
+  content: '⎘';
+  font-size: 10px;
+  margin-left: 5px;
+  opacity: 0.5;
+}
+.col-ro { color: var(--text2); font-size: 11px; }
+
+/* copy flash */
+@keyframes copyFlash {
+  0%   { background: rgba(45,110,246,0.18); }
+  100% { background: transparent; }
+}
+.copy-flash { animation: copyFlash 0.5s ease; }
+
+/* ─── RESULTS ─── */
+.results-card { display: none; }
+.results-card.show { display: block; }
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.results-title { font-size: 1.1rem; font-weight: 800; }
+
+.stats-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.stat {
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 110px;
+}
+.stat-val {
+  font-size: 1.8rem;
+  font-weight: 800;
+  font-family: var(--mono);
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-label { font-size: 0.75rem; color: var(--text2); font-weight: 600; margin-top: 4px; }
+
+.search-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  font-family: var(--sans) !important;
+  font-size: 13.5px !important;
+  padding: 9px 14px !important;
+}
+
+.result-table-wrap { overflow-x: auto; border-radius: 8px; border: 2px solid var(--border); }
+#resultTable thead tr { position: sticky; top: 0; }
+#resultTable td { white-space: nowrap; }
+#resultTable .badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+#resultTable .badge-custom { background: #d4f5e0; color: #0e7a3d; }
+[data-theme="dark"] #resultTable .badge-custom { background: #0e3a1e; color: #4ade80; }
+#resultTable .badge-default { background: #fff0d4; color: #a05e00; }
+[data-theme="dark"] #resultTable .badge-default { background: #3a2400; color: #fbbf24; }
+
+.no-results {
+  text-align: center;
+  padding: 40px;
+  color: var(--text2);
+  font-size: 0.95rem;
+}
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: #1a1a1a;
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(.34,1.4,.64,1);
+  z-index: 9999;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <span>⚡</span>
+    Kawal Summary Order (witel)
+  </div>
+  <div class="topbar-actions">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode" id="themeBtn">🌙</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- STEP 1 & 2 -->
+  <div class="step-grid">
+    <div class="card">
+      <div class="card-header">
+        <span class="step-badge">STEP 1</span>
+        <span class="card-title">Paste Data Input</span>
+      </div>
+      <textarea id="dataInput" placeholder="WITEL: AMBON
+Total INDIBIZ: 3 | Total WMS: 0
+1002201702 | MSH | TKHELMI | Provisioning Issued | INDIBIZ | 16
+1002214876 | TUA | PT. THAVA CIPTA SEJAHTERA | Provisioning Issued | INDIBIZ | 10
+1002216257 | TUA | PT THAVA CIPTA SEJAHTERA | Provisioning Issued | INDIBIZ | 9">WITEL: AMBON
+Total INDIBIZ: 3 | Total WMS: 0
+1002201702 | MSH | TKHELMI | Provisioning Issued | INDIBIZ | 16
+1002214876 | TUA | PT. THAVA CIPTA SEJAHTERA | Provisioning Issued | INDIBIZ | 10
+1002216257 | TUA | PT THAVA CIPTA SEJAHTERA | Provisioning Issued | INDIBIZ | 9</textarea>
+      <div style="margin-top:10px;">
+        <button class="btn btn-primary" style="width:100%" onclick="generateTable()">⚡ Generate Tabel Update</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="step-badge" style="background:var(--text2)">DEFAULT</span>
+        <span class="card-title">Nilai Default (fallback)</span>
+      </div>
+      <div class="defaults-grid">
+        <div class="input-group">
+          <label>Status Work</label>
+          <input type="text" id="defStatus" value="STARTWORK">
+        </div>
+        <div class="input-group">
+          <label>Unit</label>
+          <input type="text" id="defUnit" value="TIF FBB FFM DISTRICT SUMALUT">
+        </div>
+        <div class="input-group">
+          <label>Ancreaw Template</label>
+          <input type="text" id="defAncreaw" value="AMCREW_{STO}_3">
+        </div>
+        <div class="input-group">
+          <label>Summary</label>
+          <input type="text" id="defSummary" value="Pull Drop Core">
+        </div>
+        <div class="input-group">
+          <label>Log</label>
+          <input type="text" id="defLog" value="-">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 - GENERATED TABLE -->
+  <div class="card generate-table-card" id="genTableCard">
+    <div class="card-header">
+      <span class="step-badge" style="background:var(--green)">STEP 2</span>
+      <span class="card-title">Edit Data Update — <span id="orderCountLabel">0</span> Order Ditemukan</span>
+    </div>
+    <div class="order-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>No Order</th>
+            <th>STO</th>
+            <th>Nama</th>
+            <th>Tipe</th>
+            <th>Hari</th>
+            <th>Status Work</th>
+            <th>Unit</th>
+            <th>Ancreaw</th>
+            <th>Summary</th>
+            <th>Log</th>
+          </tr>
+        </thead>
+        <tbody id="orderTableBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="prosesData()">📊 Proses & Lihat Hasil</button>
+      <button class="btn btn-ghost" onclick="applyDefaultAll()">🔄 Reset Semua ke Default</button>
+    </div>
+  </div>
+
+  <!-- ACTION BAR (fallback / extra process) -->
+  <div class="action-bar" id="actionBar" style="display:none">
+    <button class="btn btn-danger" onclick="clearAll()">🗑️ Clear Semua</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="card results-card" id="resultsCard">
+    <div class="results-header">
+      <span class="results-title">📊 Hasil Output</span>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-success" onclick="copyAll()">📋 Copy Semua</button>
+        <button class="btn btn-ghost" onclick="downloadTxt()">⬇️ Download .txt</button>
+        <button class="btn btn-danger" onclick="clearAll()">🗑️ Clear</button>
+      </div>
+    </div>
+
+    <div class="stats-row" id="statsRow"></div>
+
+    <div class="search-row">
+      <input type="text" class="search-input" id="searchInput" placeholder="🔍  Cari order, nama, STO, status..." oninput="filterResults()">
+      <button class="pill-btn" id="filterAll" onclick="setFilter('all')" style="background:var(--accent);color:#fff;border-color:var(--accent)">Semua</button>
+      <button class="pill-btn" id="filterCustom" onclick="setFilter('custom')">Custom</button>
+      <button class="pill-btn" id="filterDefault" onclick="setFilter('default')">Default</button>
+    </div>
+
+    <div class="result-table-wrap">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Tipe</th>
+            <th>No Order</th>
+            <th>STO</th>
+            <th>Nama</th>
+            <th>Status Prov</th>
+            <th>Tipe Order</th>
+            <th>Hari</th>
+            <th>Status Work</th>
+            <th>Unit</th>
+            <th>Ancreaw</th>
+            <th>Summary</th>
+            <th>Log</th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Raw output hidden (used for copy/download) -->
+    <pre id="rawOutput" style="display:none"></pre>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────
+let parsedOrders = [];
+let resultsData = [];
+let activeFilter = 'all';
+
+// ─── THEME ────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+}
+
+// ─── TOAST ────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+
+// ─── COPY ORDER ID ────────────────────────────────────
+function copyOrderId(el, id) {
+  navigator.clipboard.writeText(id).then(() => {
+    el.classList.remove('copy-flash');
+    void el.offsetWidth;
+    el.classList.add('copy-flash');
+    showToast('✅ Copied: ' + id);
+  });
+}
+
+// ─── PARSE DATA INPUT ─────────────────────────────────
+function parseDataInput(text) {
+  const lines = text.trim().split('\n');
+  const meta = { witel: '', totalIndibiz: '0', totalWms: '0' };
+  const orders = [];
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
+    if (line.includes('WITEL:')) { meta.witel = line.split('WITEL:')[1].trim(); continue; }
+    if (line.includes('Total INDIBIZ:')) {
+      const p = line.split('|');
+      if (p.length >= 2) {
+        meta.totalIndibiz = p[0].split(':').pop().trim();
+        meta.totalWms = p[1].split(':').pop().trim();
+      }
+      continue;
+    }
+    const p = line.split('|').map(s => s.trim());
+    if (p.length >= 5 && /^\d/.test(p[0])) {
+      orders.push({
+        noOrder: p[0], sto: p[1], nama: p[2],
+        statusProv: p[3], tipe: p[4],
+        hari: p.length > 5 ? p[5].replace('hari','').trim() : '0'
+      });
+    }
+  }
+  return { meta, orders };
+}
+
+// ─── GENERATE TABLE ───────────────────────────────────
+function generateTable() {
+  const text = document.getElementById('dataInput').value;
+  if (!text.trim()) { showToast('⚠️ Data input kosong!'); return; }
+
+  const { meta, orders } = parseDataInput(text);
+  if (!orders.length) { showToast('⚠️ Tidak ada order ditemukan!'); return; }
+
+  parsedOrders = orders;
+  const defStatus = document.getElementById('defStatus').value;
+  const defUnit = document.getElementById('defUnit').value;
+  const defAncreaw = document.getElementById('defAncreaw').value;
+  const defSummary = document.getElementById('defSummary').value;
+  const defLog = document.getElementById('defLog').value;
+
+  const tbody = document.getElementById('orderTableBody');
+  tbody.innerHTML = '';
+
+  orders.forEach((o, i) => {
+    const ancreawDef = defAncreaw.replace('{STO}', o.sto);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="col-ro">${i+1}</td>
+      <td class="col-order" onclick="copyOrderId(this, 'SC${o.noOrder}')" title="Klik untuk copy — SC${o.noOrder}">SC${o.noOrder}</td>
+      <td>${o.sto}</td>
+      <td>${o.nama}</td>
+      <td>${o.tipe}</td>
+      <td>${o.hari}</td>
+      <td><input type="text" data-field="status" data-idx="${i}" value="${defStatus}"></td>
+      <td><input type="text" data-field="unit" data-idx="${i}" value="${defUnit}" style="min-width:180px"></td>
+      <td><input type="text" data-field="ancreaw" data-idx="${i}" value="${ancreawDef}" style="min-width:140px"></td>
+      <td><input type="text" data-field="summary" data-idx="${i}" value="${defSummary}" style="min-width:130px"></td>
+      <td><input type="text" data-field="log" data-idx="${i}" value="${defLog}"></td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  document.getElementById('orderCountLabel').textContent = orders.length;
+  document.getElementById('genTableCard').classList.add('show');
+  document.getElementById('actionBar').style.display = 'flex';
+
+  // hide old results
+  document.getElementById('resultsCard').classList.remove('show');
+
+  document.getElementById('genTableCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showToast(`✅ ${orders.length} order berhasil di-generate!`);
+}
+
+// ─── APPLY DEFAULT TO ALL ─────────────────────────────
+function applyDefaultAll() {
+  const defStatus = document.getElementById('defStatus').value;
+  const defUnit = document.getElementById('defUnit').value;
+  const defAncreaw = document.getElementById('defAncreaw').value;
+  const defSummary = document.getElementById('defSummary').value;
+  const defLog = document.getElementById('defLog').value;
+
+  parsedOrders.forEach((o, i) => {
+    document.querySelector(`[data-field="status"][data-idx="${i}"]`).value = defStatus;
+    document.querySelector(`[data-field="unit"][data-idx="${i}"]`).value = defUnit;
+    document.querySelector(`[data-field="ancreaw"][data-idx="${i}"]`).value = defAncreaw.replace('{STO}', o.sto);
+    document.querySelector(`[data-field="summary"][data-idx="${i}"]`).value = defSummary;
+    document.querySelector(`[data-field="log"][data-idx="${i}"]`).value = defLog;
+  });
+  showToast('🔄 Semua baris di-reset ke default!');
+}
+
+// ─── PROSES DATA ─────────────────────────────────────
+function prosesData() {
+  if (!parsedOrders.length) { showToast('⚠️ Generate tabel dulu!'); return; }
+
+  const text = document.getElementById('dataInput').value;
+  const { meta } = parseDataInput(text);
+
+  const defStatus = document.getElementById('defStatus').value;
+  const defUnit = document.getElementById('defUnit').value;
+  const defAncreaw = document.getElementById('defAncreaw').value;
+  const defSummary = document.getElementById('defSummary').value;
+  const defLog = document.getElementById('defLog').value;
+
+  resultsData = parsedOrders.map((o, i) => {
+    const getVal = (field) => {
+      const el = document.querySelector(`[data-field="${field}"][data-idx="${i}"]`);
+      return el ? el.value.trim() : '';
+    };
+
+    const status  = getVal('status')  || defStatus;
+    const unit    = getVal('unit')    || defUnit;
+    const ancreaw = getVal('ancreaw') || defAncreaw.replace('{STO}', o.sto);
+    const summary = getVal('summary') || defSummary;
+    const log     = getVal('log')     || defLog;
+
+    // Detect if custom (any field differs from default)
+    const ancreawDef = defAncreaw.replace('{STO}', o.sto);
+    const isCustom = status !== defStatus || unit !== defUnit || ancreaw !== ancreawDef
+                  || summary !== defSummary || log !== defLog;
+
+    return { ...o, status, unit, ancreaw, summary, log, isCustom };
+  });
+
+  // Stats
+  const customCnt = resultsData.filter(r => r.isCustom).length;
+  const defCnt = resultsData.length - customCnt;
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat"><div class="stat-val">${resultsData.length}</div><div class="stat-label">Total Order</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--green)">${customCnt}</div><div class="stat-label">Custom</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--orange)">${defCnt}</div><div class="stat-label">Default</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--text2)">${meta.witel || '-'}</div><div class="stat-label">WITEL</div></div>
+  `;
+
+  // Build raw output
+  const sep = '='.repeat(170);
+  let raw = sep + '\n';
+  raw += `WITEL: ${meta.witel}\n`;
+  raw += `Total INDIBIZ: ${meta.totalIndibiz} | Total WMS: ${meta.totalWms}\n`;
+  raw += sep + '\n\n';
+  resultsData.forEach(r => {
+    raw += `${r.noOrder} | ${r.sto} | ${r.nama} | ${r.statusProv} | ${r.tipe} | ${r.hari} hari | ${r.status} | ${r.unit} | ${r.ancreaw} | ${r.summary} | ${r.log}\n`;
+  });
+  raw += '\n' + sep + '\n';
+  document.getElementById('rawOutput').textContent = raw;
+
+  renderResultTable(resultsData);
+
+  document.getElementById('resultsCard').classList.add('show');
+  document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showToast(`✅ ${resultsData.length} data berhasil diproses!`);
+}
+
+// ─── RENDER RESULT TABLE ──────────────────────────────
+function renderResultTable(data) {
+  const tbody = document.getElementById('resultBody');
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = data.filter(r => {
+    if (activeFilter === 'custom' && !r.isCustom) return false;
+    if (activeFilter === 'default' && r.isCustom) return false;
+    if (!q) return true;
+    return [r.noOrder, r.sto, r.nama, r.statusProv, r.tipe, r.status, r.unit, r.ancreaw, r.summary, r.log]
+      .some(v => v.toLowerCase().includes(q));
+  });
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="13" class="no-results">Tidak ada data yang cocok 🔍</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((r, i) => `
+    <tr>
+      <td class="col-ro">${i+1}</td>
+      <td><span class="badge ${r.isCustom ? 'badge-custom' : 'badge-default'}">${r.isCustom ? 'CUSTOM' : 'DEFAULT'}</span></td>
+      <td class="col-order">${r.noOrder}</td>
+      <td>${r.sto}</td>
+      <td>${r.nama}</td>
+      <td>${r.statusProv}</td>
+      <td>${r.tipe}</td>
+      <td>${r.hari}</td>
+      <td>${r.status}</td>
+      <td>${r.unit}</td>
+      <td>${r.ancreaw}</td>
+      <td>${r.summary}</td>
+      <td>${r.log}</td>
+    </tr>
+  `).join('');
+}
+
+// ─── FILTER / SEARCH ─────────────────────────────────
+function filterResults() { renderResultTable(resultsData); }
+
+function setFilter(f) {
+  activeFilter = f;
+  ['filterAll','filterCustom','filterDefault'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+    document.getElementById(id).style.cssText = '';
+  });
+  const el = document.getElementById(f === 'all' ? 'filterAll' : f === 'custom' ? 'filterCustom' : 'filterDefault');
+  el.classList.add('active');
+  el.style.background = 'var(--accent)';
+  el.style.color = '#fff';
+  el.style.borderColor = 'var(--accent)';
+  renderResultTable(resultsData);
+}
+
+// ─── COPY / DOWNLOAD ─────────────────────────────────
+function copyAll() {
+  const text = document.getElementById('rawOutput').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('📋 Berhasil di-copy!'));
+}
+
+function downloadTxt() {
+  const text = document.getElementById('rawOutput').textContent;
+  const witel = (document.getElementById('dataInput').value.match(/WITEL:\s*(\S+)/) || ['','WITEL'])[1];
+  const date = new Date().toISOString().slice(0,10);
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `hasil_${witel}_${date}.txt`;
+  a.click();
+  showToast('⬇️ File .txt diunduh!');
+}
+
+function clearAll() {
+  if (!confirm('Clear semua data?')) return;
+  document.getElementById('dataInput').value = '';
+  document.getElementById('genTableCard').classList.remove('show');
+  document.getElementById('resultsCard').classList.remove('show');
+  document.getElementById('actionBar').style.display = 'none';
+  document.getElementById('orderTableBody').innerHTML = '';
+  document.getElementById('resultBody').innerHTML = '';
+  parsedOrders = [];
+  resultsData = [];
+  showToast('🗑️ Semua data dihapus!');
+}
+</script>
+</body>
+</html>
